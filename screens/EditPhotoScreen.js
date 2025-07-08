@@ -1,5 +1,3 @@
-// appears after selecting a photo to upload.
-
 import React, { useState, useEffect } from 'react';
 import {
     View,
@@ -13,6 +11,7 @@ import { loadData, saveData } from '../storage/storageHelpers';
 
 import AppText from '../components/AppText';
 import CustomButton from '../components/CustomButton';
+import { COLORS, FONTS } from '../styles/theme';
 
 export default function EditPhotoScreen({ route, navigation }) {
     const { photo } = route.params;
@@ -22,6 +21,16 @@ export default function EditPhotoScreen({ route, navigation }) {
     const [notes, setNotes] = useState('');
     const [imageUri, setImageUri] = useState('');
     const [date, setDate] = useState('');
+
+    // Request permissions on mount
+    useEffect(() => {
+        (async () => {
+            const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+            if (status !== 'granted') {
+                Alert.alert('Permission required', 'We need media access to pick images.');
+            }
+        })();
+    }, []);
 
     useEffect(() => {
         if (photo) {
@@ -34,12 +43,18 @@ export default function EditPhotoScreen({ route, navigation }) {
     }, [photo]);
 
     const pickImage = async () => {
+        const permission = await ImagePicker.getMediaLibraryPermissionsAsync();
+        if (permission.status !== 'granted') {
+            Alert.alert('Permission denied', 'You need to grant media access to pick an image.');
+            return;
+        }
+
         const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            mediaTypes: ImagePicker.MediaType.IMAGE,
             quality: 0.7,
         });
 
-        if (!result.canceled) {
+        if (!result.canceled && result.assets.length > 0) {
             setImageUri(result.assets[0].uri);
         }
     };
@@ -63,7 +78,6 @@ export default function EditPhotoScreen({ route, navigation }) {
             p.id === photo.id ? updatedEntry : p
         );
         await saveData(updatedList);
-
         navigation.navigate('Photo Log');
     };
 
@@ -76,6 +90,7 @@ export default function EditPhotoScreen({ route, navigation }) {
             <TextInput
                 style={styles.input}
                 placeholder="Enter title"
+                placeholderTextColor={COLORS.muted}
                 value={title}
                 onChangeText={setTitle}
             />
@@ -84,6 +99,7 @@ export default function EditPhotoScreen({ route, navigation }) {
             <TextInput
                 style={styles.input}
                 placeholder="e.g. sunset, travel"
+                placeholderTextColor={COLORS.muted}
                 value={tags}
                 onChangeText={setTags}
             />
@@ -92,6 +108,7 @@ export default function EditPhotoScreen({ route, navigation }) {
             <TextInput
                 style={styles.input}
                 placeholder="Optional notes..."
+                placeholderTextColor={COLORS.muted}
                 value={notes}
                 onChangeText={setNotes}
                 multiline
@@ -106,27 +123,33 @@ export default function EditPhotoScreen({ route, navigation }) {
 
 const styles = StyleSheet.create({
     container: {
+        flex: 1,
+        backgroundColor: COLORS.background,
         padding: 20,
         gap: 12,
-        flex: 1,
-        backgroundColor: '#fff',
     },
     label: {
-        marginTop: 10,
         fontSize: 14,
+        color: COLORS.text,
+        fontFamily: FONTS.bold,
+        marginTop: 10,
         marginBottom: 4,
     },
     input: {
+        backgroundColor: COLORS.card,
+        color: COLORS.text,
+        borderBottomColor: COLORS.border,
         borderBottomWidth: 1,
-        borderColor: '#ccc',
         paddingVertical: 8,
         paddingHorizontal: 10,
+        fontFamily: FONTS.regular,
         fontSize: 16,
-        marginBottom: 8,
+        borderRadius: 6,
     },
     dateText: {
         fontSize: 14,
-        color: '#666',
+        color: COLORS.muted,
+        fontFamily: FONTS.regular,
         marginVertical: 10,
     },
     image: {
@@ -134,5 +157,6 @@ const styles = StyleSheet.create({
         height: 200,
         borderRadius: 10,
         marginVertical: 10,
+        backgroundColor: COLORS.card,
     },
 });

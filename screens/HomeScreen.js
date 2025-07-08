@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import {View, FlatList, StyleSheet,} from 'react-native';
+import { View, FlatList, StyleSheet } from 'react-native';
 
 import { loadData, saveData } from '../storage/storageHelpers';
 import PhotoCard from '../components/PhotoCard';
 import AppText from '../components/AppText';
 import CustomButton from '../components/CustomButton';
-
-import { COLORS } from '../styles/theme';    // Optional
+import { COLORS } from '../styles/theme';
 
 export default function HomeScreen({ navigation }) {
     const [photos, setPhotos] = useState([]);
@@ -18,12 +17,14 @@ export default function HomeScreen({ navigation }) {
             setPhotos(stored);
             setFilteredPhotos(stored);
         };
-        const unsubscribe = navigation.addListener('focus', load);
-        return unsubscribe;
+        const unsub = navigation.addListener('focus', load);
+        return unsub;
     }, [navigation]);
 
     const sortByDate = () => {
-        const sorted = [...filteredPhotos].sort((a, b) => new Date(b.date) - new Date(a.date));
+        const sorted = [...filteredPhotos].sort(
+            (a, b) => new Date(b.date) - new Date(a.date)
+        );
         setFilteredPhotos(sorted);
     };
 
@@ -38,12 +39,13 @@ export default function HomeScreen({ navigation }) {
 
     return (
         <View style={styles.container}>
-            <View style={styles.topBar}>
-                <CustomButton title="+ Add New" onPress={() => navigation.navigate('Add')} />
-                <CustomButton title="Sort by Date" onPress={sortByDate} />
-                <CustomButton title="Filter: Nature" onPress={filterByNature} />
-                <CustomButton title="Reset" onPress={resetFilter} />
-            </View>
+            <CustomButton
+                title="Add New"
+                onPress={() => navigation.navigate('Add')}
+            />
+            <CustomButton title="Sort by Date" onPress={sortByDate} />
+            <CustomButton title="Filter: Nature" onPress={filterByNature} />
+            <CustomButton title="Reset" onPress={resetFilter} />
 
             {filteredPhotos.length === 0 ? (
                 <AppText style={styles.emptyText}>No photo entries found.</AppText>
@@ -63,6 +65,7 @@ export default function HomeScreen({ navigation }) {
                             }}
                         />
                     )}
+                    contentContainerStyle={styles.list}
                 />
             )}
         </View>
@@ -72,16 +75,17 @@ export default function HomeScreen({ navigation }) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 12,
         backgroundColor: COLORS.background,
+        padding: 16,
+        gap: 12,
     },
-    topBar: {
-        marginBottom: 10,
-        gap: 8,
+    list: {
+        paddingTop: 12,
     },
     emptyText: {
         marginTop: 50,
         textAlign: 'center',
         color: COLORS.muted,
+        fontSize: 16,
     },
 });

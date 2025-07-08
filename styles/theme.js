@@ -1,14 +1,14 @@
 // styles/theme.js
-export const COLORS = {
-    background: '#ffffff',
-    text: '#111111',
-    muted: '#777777',
-    primary: '#007AFF',
-    border: '#E5E5E5',
-    gray: '#F5F5F5',
+
+export const COLORS = {    // Main background (pure black)
+  card: '#1C1C1E',           // Card/list item background (slightly lighter black)
+  border: '#3A3A3C',         // Border/divider (soft gray)
+  text: '#FFFFFF',           // Primary text (white)
+  muted: '#8E8E93',          // Secondary/muted text (iOS muted gray)
+  primary: '#424242',        // iOS blue for buttons or highlights
 };
 
 export const FONTS = {
-    regular: 'Inter_400Regular',
-    bold: 'Inter_700Bold',
+  regular: 'Inter_400Regular',
+  bold: 'Inter_700Bold',
 };
