@@ -5,10 +5,12 @@ import {
     StyleSheet,
     Image,
     Alert,
+    Platform,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { loadData, saveData } from '../storage/storageHelpers';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
+import { loadData, saveData } from '../storage/storageHelpers';
 import AppText from '../components/AppText';
 import CustomButton from '../components/CustomButton';
 import { COLORS, FONTS } from '../styles/theme';
@@ -21,8 +23,10 @@ export default function EditPhotoScreen({ route, navigation }) {
     const [notes, setNotes] = useState('');
     const [imageUri, setImageUri] = useState('');
     const [date, setDate] = useState('');
+    const [showPicker, setShowPicker] = useState(false);
+    const [selectedDate, setSelectedDate] = useState(new Date());
 
-    // Request permissions on mount
+    // Request permission on mount
     useEffect(() => {
         (async () => {
             const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -32,6 +36,7 @@ export default function EditPhotoScreen({ route, navigation }) {
         })();
     }, []);
 
+    // Populate fields from route params
     useEffect(() => {
         if (photo) {
             setTitle(photo.title);
@@ -39,6 +44,7 @@ export default function EditPhotoScreen({ route, navigation }) {
             setNotes(photo.notes);
             setImageUri(photo.imageUri);
             setDate(photo.date);
+            setSelectedDate(new Date(photo.date));
         }
     }, [photo]);
 
@@ -50,7 +56,7 @@ export default function EditPhotoScreen({ route, navigation }) {
         }
 
         const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaType.IMAGE,
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
             quality: 0.7,
         });
 
@@ -59,11 +65,21 @@ export default function EditPhotoScreen({ route, navigation }) {
         }
     };
 
-    const handleSave = async () => {
-        if (!title || !tags || !imageUri) {
-            Alert.alert('Please fill all required fields.');
-            return;
+    const toggleDatePicker = () => setShowPicker(true);
+
+    const handleDateChange = (event, newDate) => {
+        setShowPicker(Platform.OS === 'ios');
+        if (newDate) {
+            setSelectedDate(newDate);
+            setDate(newDate.toISOString().slice(0, 10));
         }
+    };
+
+    const handleSave = async () => {
+        // if (!title || !tags || !imageUri) {
+        //     Alert.alert('Please fill all required fields.');
+        //     return;
+        // }
 
         const updatedEntry = {
             ...photo,
@@ -71,6 +87,7 @@ export default function EditPhotoScreen({ route, navigation }) {
             tags: tags.split(',').map(tag => tag.trim()),
             notes,
             imageUri,
+            date,
         };
 
         const all = await loadData();
@@ -114,7 +131,18 @@ export default function EditPhotoScreen({ route, navigation }) {
                 multiline
             />
 
-            <AppText style={styles.dateText}>Date: {date}</AppText>
+            <AppText style={styles.label}>Date</AppText>
+            <CustomButton title="Edit Date" onPress={toggleDatePicker} />
+            <AppText style={styles.dateText}>{date}</AppText>
+
+            {showPicker && (
+                <DateTimePicker
+                    value={selectedDate}
+                    mode="date"
+                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                    onChange={handleDateChange}
+                />
+            )}
 
             <CustomButton title="Save Changes" onPress={handleSave} />
         </View>
@@ -150,7 +178,7 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: COLORS.muted,
         fontFamily: FONTS.regular,
-        marginVertical: 10,
+        marginBottom: 10,
     },
     image: {
         width: '100%',

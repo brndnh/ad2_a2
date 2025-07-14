@@ -11,6 +11,9 @@ import HomeScreen from './screens/HomeScreen';
 import AddPhotoScreen from './screens/AddPhotoScreen';
 import EditPhotoScreen from './screens/EditPhotoScreen';
 
+// Sample Data Screen
+import DataLoaderScreen from './screens/DataLoaderScreen';
+
 const Stack = createNativeStackNavigator();
 
 export default function App() {
@@ -27,7 +30,6 @@ export default function App() {
     );
   }
 
-
   return (
     <NavigationContainer theme={DarkTheme}>
       <Stack.Navigator
@@ -40,6 +42,13 @@ export default function App() {
         <Stack.Screen name="Photo Log" component={HomeScreen} />
         <Stack.Screen name="Add" component={AddPhotoScreen} />
         <Stack.Screen name="Edit" component={EditPhotoScreen} />
+
+        { /* Sample Data */}
+        <Stack.Screen
+          name="DataLoader"
+          component={DataLoaderScreen}
+          options={{ title: 'Data Loader' }}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );

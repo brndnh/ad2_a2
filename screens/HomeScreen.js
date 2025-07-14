@@ -1,52 +1,103 @@
 import React, { useEffect, useState } from 'react';
-import { View, FlatList, StyleSheet } from 'react-native';
+import {
+    View,
+    FlatList,
+    StyleSheet,
+    TextInput,
+} from 'react-native';
 
 import { loadData, saveData } from '../storage/storageHelpers';
 import PhotoCard from '../components/PhotoCard';
 import AppText from '../components/AppText';
 import CustomButton from '../components/CustomButton';
-import { COLORS } from '../styles/theme';
+import { COLORS, FONTS } from '../styles/theme';
 
 export default function HomeScreen({ navigation }) {
     const [photos, setPhotos] = useState([]);
     const [filteredPhotos, setFilteredPhotos] = useState([]);
+    const [searchTags, setSearchTags] = useState('');
 
+    // Load & sort (newest first) whenever screen gains focus
     useEffect(() => {
         const load = async () => {
             const stored = await loadData();
-            setPhotos(stored);
-            setFilteredPhotos(stored);
+            const sorted = stored.sort(
+                (a, b) => new Date(b.date) - new Date(a.date)
+            );
+            setPhotos(sorted);
+            setFilteredPhotos(sorted);
         };
-        const unsub = navigation.addListener('focus', load);
-        return unsub;
+        const unsubscribe = navigation.addListener('focus', load);
+        return unsubscribe;
     }, [navigation]);
 
-    const sortByDate = () => {
-        const sorted = [...filteredPhotos].sort(
-            (a, b) => new Date(b.date) - new Date(a.date)
-        );
-        setFilteredPhotos(sorted);
+    // When search is cleared, reset to full sorted list
+    useEffect(() => {
+        if (searchTags.trim() === '') {
+            setFilteredPhotos(photos);
+        }
+    }, [searchTags, photos]);
+
+    // Filter by comma separated tags
+    const applyFilter = () => {
+        const terms = searchTags
+            .split(',')
+            .map(t => t.trim().toLowerCase())
+            .filter(Boolean);
+
+        if (terms.length === 0) {
+            setFilteredPhotos(photos);
+        } else {
+            setFilteredPhotos(
+                photos.filter(photo => {
+                    const lowerTags = photo.tags.map(t => t.toLowerCase());
+                    return terms.every(term => lowerTags.includes(term));
+                })
+            );
+        }
     };
 
-    const filterByNature = () => {
-        const filtered = photos.filter(p => p.tags.includes('nature'));
-        setFilteredPhotos(filtered);
-    };
-
+    // Reset search and show all
     const resetFilter = () => {
+        setSearchTags('');
         setFilteredPhotos(photos);
     };
 
     return (
         <View style={styles.container}>
-            <CustomButton
-                title="Add New"
-                onPress={() => navigation.navigate('Add')}
-            />
-            <CustomButton title="Sort by Date" onPress={sortByDate} />
-            <CustomButton title="Filter: Nature" onPress={filterByNature} />
-            <CustomButton title="Reset" onPress={resetFilter} />
+            {/* Top Bar: Add and Reset */}
+            <View style={styles.topBar}>
+                <CustomButton
+                    title="+ Add New"
+                    onPress={() => navigation.navigate('Add')}
+                />
+                <CustomButton title="Reset" onPress={resetFilter} />
 
+                {/* Sample Data Button */}
+                <CustomButton
+                    title="Load Sample Data"
+                    onPress={() => navigation.navigate('DataLoader')}
+                />
+            </View>
+
+            {/* Search Bar */}
+            <View style={styles.searchBar}>
+                <TextInput
+                    style={styles.searchInput}
+                    placeholder="Filter by tag(s)…"
+                    placeholderTextColor={COLORS.muted}
+                    value={searchTags}
+                    onChangeText={setSearchTags}
+                    onSubmitEditing={applyFilter}
+                />
+                <CustomButton
+                    title="Filter"
+                    onPress={applyFilter}
+                    style={styles.searchBtn}
+                />
+            </View>
+
+            {/* Empty State or Photo List */}
             {filteredPhotos.length === 0 ? (
                 <AppText style={styles.emptyText}>No photo entries found.</AppText>
             ) : (
@@ -56,7 +107,9 @@ export default function HomeScreen({ navigation }) {
                     renderItem={({ item }) => (
                         <PhotoCard
                             data={item}
-                            onEdit={() => navigation.navigate('Edit', { photo: item })}
+                            onEdit={() =>
+                                navigation.navigate('Edit', { photo: item })
+                            }
                             onDelete={async () => {
                                 const updated = photos.filter(p => p.id !== item.id);
                                 setPhotos(updated);
@@ -65,7 +118,6 @@ export default function HomeScreen({ navigation }) {
                             }}
                         />
                     )}
-                    contentContainerStyle={styles.list}
                 />
             )}
         </View>
@@ -76,16 +128,37 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: COLORS.background,
-        padding: 16,
-        gap: 12,
+        padding: 12,
     },
-    list: {
-        paddingTop: 12,
+    topBar: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 12,
+    },
+    searchBar: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 12,
+    },
+    searchInput: {
+        flex: 1,
+        height: 40,
+        backgroundColor: COLORS.card,
+        color: COLORS.text,
+        borderRadius: 8,
+        paddingHorizontal: 12,
+        fontFamily: FONTS.regular,
+        marginRight: 8,
+    },
+    searchBtn: {
+        height: 40,
+        justifyContent: 'center',
+        paddingHorizontal: 16,
     },
     emptyText: {
         marginTop: 50,
         textAlign: 'center',
         color: COLORS.muted,
-        fontSize: 16,
+        fontFamily: FONTS.regular,
     },
 });
