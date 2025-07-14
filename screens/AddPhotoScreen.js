@@ -1,11 +1,5 @@
 import React, { useState } from 'react';
-import {
-    View,
-    TextInput,
-    StyleSheet,
-    Image,
-    Alert,
-} from 'react-native';
+import { View, TextInput, StyleSheet, Image, Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { saveData, loadData } from '../storage/storageHelpers';
 
